@@ -1,11 +1,9 @@
 package SinkholeServer;
+
 import java.io.IOException;
 import java.net.*;
 
-import Infra.DnsPacket;
-import Infra.DnsPacketFactory;
-import Infra.DomainEnforcer;
-import Infra.RootDnsServerProvider;
+import Infra.*;
 
 /**
  * Class that defines the server object that runs the entire flow of dns requests and responses
@@ -29,7 +27,7 @@ class SinkholeServer {
      */
     public void Start()
     {
-        byte[] requestData = new byte[CDnsUdpPacketSize];
+        byte[] requestData = new byte[DnsOperationsConsts.DnsUdpPacketSize];
         byte[] sendData;
 
         tryInitServerSocket();
@@ -56,8 +54,11 @@ class SinkholeServer {
 
             // TODO: Create new DNSClient here that will manage interaction with auth servers.
             // send datagram packet to the root.
-            DatagramPacket sendRootDatagram =
-                    new DatagramPacket(requestData, requestData.length, rootServer, CDnsPortNumber);
+            DatagramPacket sendRootDatagram = new DatagramPacket(
+                                                    requestData,
+                                                    requestData.length,
+                                                    rootServer,
+                                                    DnsOperationsConsts.DnsPort);
 
 //            InetAddress IPAddress = receiveDatagram.getAddress();
 //            int port = receiveDatagram.getPort();
@@ -121,6 +122,4 @@ class SinkholeServer {
     private RootDnsServerProvider _rootProvider;
     private DnsPacketFactory _dnsPacketFactory;
     private int _listenPort;
-    private static final int CDnsUdpPacketSize = 1024;
-    private static final int CDnsPortNumber = 53;
 }

@@ -13,10 +13,10 @@ public class BlockListLoader {
     }
 
     /**
-     * Fetches the block list as a HashSet.
+     * Loads the block list to a HashSet.
      * @return the block list as HashSet.
      */
-    public HashSet<String> GetBlockList()
+    public HashSet<String> Load()
     {
         // Establish reader.
         BufferedReader reader = getBlockListFileReader();
