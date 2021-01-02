@@ -19,7 +19,6 @@ class SinkholeServer {
         this._serverSocket = null;
         this._domainEnforcer = domainEnforcer;
         this._rootProvider = new RootDnsServerProvider();
-        this._dnsPacketFactory = new DnsPacketFactory();
     }
 
     /**
@@ -40,10 +39,10 @@ class SinkholeServer {
             // extract dns data.
             byte[] rawDnsData = receiveDatagram.getData();
 
-            DnsPacket dnsPacket = _dnsPacketFactory.Create(rawDnsData);
+            DnsPacket dnsPacket = new DnsPacket(rawDnsData);
 
             // whitelist the dns domain.
-            if(_domainEnforcer.IsAllowed(dnsPacket.QDomainName))
+            if(_domainEnforcer.IsAllowed(dnsPacket.getQDomainName()))
             {
                 RespondWithBadDomain();
                 continue;
@@ -108,7 +107,7 @@ class SinkholeServer {
     {
         try
         {
-            this._serverSocket = new DatagramSocket(9876);
+            this._serverSocket = new DatagramSocket(_listenPort);
 
         }
         catch (SocketException e)
@@ -118,8 +117,7 @@ class SinkholeServer {
     }
 
     private DatagramSocket _serverSocket;
-    private DomainEnforcer _domainEnforcer;
-    private RootDnsServerProvider _rootProvider;
-    private DnsPacketFactory _dnsPacketFactory;
-    private int _listenPort;
+    private final DomainEnforcer _domainEnforcer;
+    private final RootDnsServerProvider _rootProvider;
+    private final int _listenPort;
 }

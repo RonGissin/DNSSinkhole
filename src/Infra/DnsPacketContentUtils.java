@@ -3,21 +3,14 @@ package Infra;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DnsPacketFactory {
-    public DnsPacketFactory()
-    {
-    }
+public class DnsPacketContentUtils {
+    private DnsPacketContentUtils() {}
 
-    public DnsPacket Create(byte[] rawDnsData)
-    {
-        return new DnsPacket(extractDomainName(), null);
-    }
-
-    private String extractDomainName() {
+    public static String ExtractQDomainName(byte[] rawDnsData) {
         StringBuilder domainName = new StringBuilder();
 
         // skip the header section.
-        int location = CHeaderSectionLength;
+        int location = DnsOperationsConsts.DnsHeaderLength;
 
 
         // a list to hold the current label content being read.
@@ -26,7 +19,7 @@ public class DnsPacketFactory {
         int currentLabelContentLength = 0;
         int currentByteInContentLength = 0;
 
-        int current = _rawDnsData[location];
+        int current = rawDnsData[location];
         location++;
 
         while(current != 0)
@@ -34,7 +27,7 @@ public class DnsPacketFactory {
             if(current >= CReadingPointerThreshold) // jump to pointer.
             {
                 // jump to pointer.
-                location = _rawDnsData[current - CReadingPointerThreshold];
+                location = rawDnsData[current - CReadingPointerThreshold];
                 isReadingLengthPart = true;
             }
             else
@@ -68,7 +61,7 @@ public class DnsPacketFactory {
                 location++;
             }
 
-            current = _rawDnsData[location];
+            current = rawDnsData[location];
         }
 
         // trim last period.
@@ -77,13 +70,17 @@ public class DnsPacketFactory {
         return domainName.toString();
     }
 
-    private void appendLabelToDomainName(StringBuilder domainName, List<Character> labelContent)
+    // TODO: implement.
+    public static String ExtractResponseIpAddress(byte[] rawDnsData)
+    {
+        return "";
+    }
+
+    private static void appendLabelToDomainName(StringBuilder domainName, List<Character> labelContent)
     {
         domainName.append(labelContent.toArray());
         domainName.append('.');
     }
 
-    private byte[] _rawDnsData;
-    private static final int CHeaderSectionLength  = 12;
     private static final int CReadingPointerThreshold = 192;
 }
