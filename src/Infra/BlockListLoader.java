@@ -1,14 +1,21 @@
-package BlockList;
+package Infra;
 
 import java.io.*;
 import java.net.URL;
 import java.util.HashSet;
 
+/**
+ * Class for loading the domain dns block list from a .txt file
+ */
 public class BlockListLoader {
     public BlockListLoader()
     {
     }
 
+    /**
+     * Fetches the block list as a HashSet.
+     * @return the block list as HashSet.
+     */
     public HashSet<String> GetBlockList()
     {
         // Establish reader.
@@ -32,10 +39,6 @@ public class BlockListLoader {
             reader = new BufferedReader(new FileReader(file));
         }
         catch (FileNotFoundException e)
-        {
-            System.out.println(String.format("BlockListLoader - exception occurred establishing reader. exception = {0}", e));
-        }
-        catch (IOException e)
         {
             System.out.println(String.format("BlockListLoader - exception occurred establishing reader. exception = {0}", e));
         }
