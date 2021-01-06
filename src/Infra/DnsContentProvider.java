@@ -1,6 +1,7 @@
 package Infra;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DnsContentProvider {
@@ -31,6 +32,8 @@ public class DnsContentProvider {
 
 
     public String get_questionName() {
+        System.out.println(_questionName);
+
         return _questionName;
     }
 
@@ -168,8 +171,12 @@ public class DnsContentProvider {
 
     private static void appendLabelToDomainName(StringBuilder domainName, List<Character> labelContent)
     {
-        domainName.append(labelContent.toArray());
+        for (char c: labelContent)
+        {
+            domainName.append(c);
+        }
         domainName.append('.');
+
     }
 
     private static final int CReadingPointerThreshold = 192;

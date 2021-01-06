@@ -5,8 +5,9 @@ import java.net.DatagramPacket;
 public class DnsPacket {
     public DnsPacket(DatagramPacket udpPacket)
     {
-        _provider = new DnsContentProvider(this);
         _rawDnsData = udpPacket.getData();
+        _provider = new DnsContentProvider(this);
+
         _qDomainName = _provider.get_questionName();
         _isAnswer = _provider.IsFinalAnswer();
         _firstAuthorityName = _provider.get_authority();

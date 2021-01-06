@@ -4,10 +4,7 @@ import Infra.DnsOperationsConsts;
 import Infra.DnsPacket;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 
 public class DnsIterativeClient {
     public DnsIterativeClient()
@@ -44,11 +41,16 @@ public class DnsIterativeClient {
         // run on all servers.
         while(!ResponseDnsPacket.IsFinalAnswer()) {
             //send to dns server
-            DatagramPacket packetForNextDNS = new DatagramPacket(
-                    requestPacket.getData(),
-                    requestPacket.getData().length,
-                    InetAddress.getByName(ResponseDnsPacket.get_authority()),
-                    DnsOperationsConsts.DnsPort);
+            DatagramPacket packetForNextDNS = null;
+            try {
+                packetForNextDNS = new DatagramPacket(
+                        requestPacket.getData(),
+                        requestPacket.getData().length,
+                        InetAddress.getByName(ResponseDnsPacket.get_authority()),
+                        DnsOperationsConsts.DnsPort);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
 
             trySendResponseUdpPacket(packetForNextDNS);
 

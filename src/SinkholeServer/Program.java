@@ -14,7 +14,7 @@ public class Program {
 
         DomainEnforcer domainEnforcer = new DomainEnforcer(blockList);
 
-        SinkholeServer server = new SinkholeServer(DnsOperationsConsts.DnsPort, domainEnforcer);
+        SinkholeServer server = new SinkholeServer(53, domainEnforcer);
 
         // start server.
         server.Start();
