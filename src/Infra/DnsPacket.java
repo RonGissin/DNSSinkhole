@@ -1,18 +1,35 @@
 package Infra;
 
+import java.net.DatagramPacket;
+
 public class DnsPacket {
-    public DnsPacket(byte[] rawDnsData)
+    public DnsPacket(DatagramPacket udpPacket)
     {
-        _rawDnsData = rawDnsData;
-        _qDomainName = DnsPacketContentUtils.ExtractQDomainName(_rawDnsData);
-        _responseIp = DnsPacketContentUtils.ExtractResponseIpAddress(_rawDnsData);
+        _provider = new DnsContentProvider(this);
+        _rawDnsData = udpPacket.getData();
+        _qDomainName = _provider.get_questionName();
+        _isAnswer = _provider.IsFinalAnswer();
+        _firstAuthorityName = _provider.get_authority();
     }
 
-    public String getQDomainName() {
+    public byte[] getData()
+    {
+        return _rawDnsData;
+    }
+
+    public String getQDomainName()
+    {
         return _qDomainName;
+    }
+
+    public boolean IsFinalAnswer()
+    {
+        return _isAnswer;
     }
 
     private byte[] _rawDnsData;
     private String _qDomainName;
-    private String _responseIp;
+    private boolean _isAnswer;
+    private DnsContentProvider _provider;
+    private String _firstAuthorityName;
 }

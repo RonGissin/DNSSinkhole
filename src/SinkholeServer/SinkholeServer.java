@@ -15,10 +15,11 @@ class SinkholeServer {
      */
     public SinkholeServer(int listenPort, DomainEnforcer domainEnforcer)
     {
-        this._listenPort = listenPort;
-        this._serverSocket = null;
-        this._domainEnforcer = domainEnforcer;
-        this._rootProvider = new RootDnsServerProvider();
+        _listenPort = listenPort;
+        _serverSocket = null;
+        _domainEnforcer = domainEnforcer;
+        _rootProvider = new RootDnsServerAddressProvider();
+        _iterativeClient = new DnsIterativeClient();
     }
 
     /**
@@ -26,52 +27,49 @@ class SinkholeServer {
      */
     public void Start()
     {
-        byte[] requestData = new byte[DnsOperationsConsts.DnsUdpPacketSize];
         byte[] sendData;
 
         tryInitServerSocket();
 
         while (true) {
             // receive datagram packet.
-            DatagramPacket receiveDatagram = new DatagramPacket(requestData, requestData.length);
-            tryReceivePacket(receiveDatagram);
-
-            // extract dns data.
-            byte[] rawDnsData = receiveDatagram.getData();
-
-            DnsPacket dnsPacket = new DnsPacket(rawDnsData);
+            DatagramPacket requestUdpPacket = tryReceiveUdpPacket();
+            DnsPacket requestDnsPacket = new DnsPacket(requestUdpPacket);
 
             // whitelist the dns domain.
-            if(_domainEnforcer.IsAllowed(dnsPacket.getQDomainName()))
+            if(!_domainEnforcer.IsAllowed(requestDnsPacket.getQDomainName()))
             {
+                // TODO: implement
                 RespondWithBadDomain();
                 continue;
             }
 
             // get random root dns server ip.
-            InetAddress rootServer = tryGetRootIpAddress();
+            InetAddress rootServerAddress = tryGetRootServerAddress();
 
-            // TODO: Create new DNSClient here that will manage interaction with auth servers.
-            // send datagram packet to the root.
-            DatagramPacket sendRootDatagram = new DatagramPacket(
-                                                    requestData,
-                                                    requestData.length,
-                                                    rootServer,
-                                                    DnsOperationsConsts.DnsPort);
+            DnsPacket responseDnsPacket = _iterativeClient.GetResponsePacket(requestUdpPacket, rootServerAddress);
+            DatagramPacket responseUdpPacket = new DatagramPacket(
+                    responseDnsPacket.getData(),
+                    responseDnsPacket.getData().length,
+                    requestUdpPacket.getAddress(),
+                    requestUdpPacket.getPort());
 
-//            InetAddress IPAddress = receiveDatagram.getAddress();
-//            int port = receiveDatagram.getPort();
-//            String capitalizedSentence = sentence.toUpperCase();
-//
-//            sendData = capitalizedSentence.getBytes();
-//
-//            DatagramPacket sendPacket =
-//                    new DatagramPacket(sendData, sendData.length, IPAddress, port);
-//            _serverSocket.send(sendPacket);
+            trySendResponseUdpPacket(responseUdpPacket);
         }
     }
 
-    private InetAddress tryGetRootIpAddress()
+    private void trySendResponseUdpPacket(DatagramPacket responsePacket)
+    {
+        try
+        {
+            _serverSocket.send(responsePacket);
+        } catch (IOException e)
+        {
+            System.out.println(String.format("Exception occurred while trying to send response packet to client. exception = {0}", e));
+        }
+    }
+
+    private InetAddress tryGetRootServerAddress()
     {
         InetAddress rootServer = null;
 
@@ -92,7 +90,10 @@ class SinkholeServer {
 
     }
 
-    private void tryReceivePacket(DatagramPacket receivePacket) {
+    private DatagramPacket tryReceiveUdpPacket() {
+        byte[] receiveData = new byte[DnsOperationsConsts.DnsUdpPacketSize];
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
         try
         {
             this._serverSocket.receive(receivePacket);
@@ -101,6 +102,8 @@ class SinkholeServer {
         {
             System.out.println(String.format("Exception occured while trying to receive packet. exception = {0}", e));
         }
+
+        return receivePacket;
     }
 
     private void tryInitServerSocket()
@@ -118,6 +121,7 @@ class SinkholeServer {
 
     private DatagramSocket _serverSocket;
     private final DomainEnforcer _domainEnforcer;
-    private final RootDnsServerProvider _rootProvider;
+    private final RootDnsServerAddressProvider _rootProvider;
+    private final DnsIterativeClient _iterativeClient;
     private final int _listenPort;
 }
