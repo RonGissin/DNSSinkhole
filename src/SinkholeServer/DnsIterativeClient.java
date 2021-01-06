@@ -39,11 +39,28 @@ public class DnsIterativeClient {
         // get response from root.
         DatagramPacket receivePacket = tryReceiveUdpPacket();
 
-        DnsPacket rootResponseDnsPacket = new DnsPacket(receivePacket);
+        DnsPacket ResponseDnsPacket = new DnsPacket(receivePacket);
 
         // run on all servers.
-        while(requestPacket.)
-    }
+        while(!ResponseDnsPacket.IsFinalAnswer()) {
+            //send to dns server
+            DatagramPacket packetForNextDNS = new DatagramPacket(
+                    requestPacket.getData(),
+                    requestPacket.getData().length,
+                    InetAddress.getByName(ResponseDnsPacket.get_authority()),
+                    DnsOperationsConsts.DnsPort);
+
+            trySendResponseUdpPacket(packetForNextDNS);
+
+            // get response from dns servee.
+            receivePacket = tryReceiveUdpPacket();
+
+            ResponseDnsPacket = new DnsPacket(receivePacket);
+        }
+
+        return ResponseDnsPacket;
+
+        }
 
     private void trySendResponseUdpPacket(DatagramPacket responsePacket)
     {

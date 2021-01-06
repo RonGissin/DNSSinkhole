@@ -27,6 +27,10 @@ public class DnsPacket {
         return _isAnswer;
     }
 
+    public String get_authority() {
+        return _firstAuthorityName;
+    }
+
     private byte[] _rawDnsData;
     private String _qDomainName;
     private boolean _isAnswer;
