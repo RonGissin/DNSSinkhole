@@ -28,46 +28,51 @@ public class DnsIterativeClient {
         DatagramPacket packetForRoot = new DatagramPacket(
                 requestPacket.getData(),
                 requestPacket.getData().length,
-                rootAddress,
+                nsServerAddress,
                 DnsOperationsConsts.DnsPort);
 
         // send query to root.
-        trySendResponseUdpPacket(packetForRoot);
+        trySendQueryUdpPacket(packetForRoot);
         // get response from root.
         DatagramPacket receivePacket = tryReceiveUdpPacket();
 
-        DnsPacket ResponseDnsPacket = new DnsPacket(receivePacket);
+        DnsPacket responseDnsPacket = new DnsPacket(receivePacket);
 
         // run on all servers.
-        while(!ResponseDnsPacket.IsFinalAnswer()) {
+        while(!responseDnsPacket.IsFinalAnswer()) {
             //send to dns server
             DatagramPacket packetForNextDNS = null;
             try {
                 packetForNextDNS = new DatagramPacket(
                         requestPacket.getData(),
                         requestPacket.getData().length,
-                        InetAddress.getByName(ResponseDnsPacket.get_authority()),
+                        InetAddress.getByName(responseDnsPacket.get_authority()),
                         DnsOperationsConsts.DnsPort);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
 
-            trySendResponseUdpPacket(packetForNextDNS);
+            trySendQueryUdpPacket(packetForNextDNS);
+
 
             // get response from dns servee.
             receivePacket = tryReceiveUdpPacket();
 
-            ResponseDnsPacket = new DnsPacket(receivePacket);
+            responseDnsPacket = new DnsPacket(receivePacket);
         }
 
-        return ResponseDnsPacket;
+        // flip necessary bits.
+        responseDnsPacket.set_RecursionAvailable(true);
+        responseDnsPacket.set_AuthoritativeAnswer(false);
 
-        }
+        return responseDnsPacket;
+    }
 
-    private void trySendResponseUdpPacket(DatagramPacket responsePacket)
+    private void trySendQueryUdpPacket(DatagramPacket responsePacket)
     {
         try
         {
+            System.out.println("DnsIterativeClient - sending out datagram to authority/root server.");
             _clientSocket.send(responsePacket);
         } catch (IOException e)
         {
@@ -80,7 +85,9 @@ public class DnsIterativeClient {
 
         try
         {
+            System.out.println("DnsIterativeClient - awaiting response from authority server.");
             this._clientSocket.receive(receivePacket);
+            System.out.println("DnsIterativeClient - received response from authority server - " + receivePacket.getAddress().toString());
         }
         catch(IOException e)
         {

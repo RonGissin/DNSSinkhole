@@ -2,7 +2,6 @@ package SinkholeServer;
 
 import java.io.IOException;
 import java.net.*;
-
 import Infra.*;
 
 /**
@@ -32,15 +31,16 @@ class SinkholeServer {
         tryInitServerSocket();
 
         while (true) {
+            System.out.println("SinkholeServer - listening for udp packets.");
             // receive datagram packet.
             DatagramPacket requestUdpPacket = tryReceiveUdpPacket();
+            System.out.println("SinkholeServer - received udp packet from client.");
             DnsPacket requestDnsPacket = new DnsPacket(requestUdpPacket);
 
             // whitelist the dns domain.
-            if(!_domainEnforcer.IsAllowed(requestDnsPacket.getQDomainName()))
+            if(!_domainEnforcer.IsAllowed(requestDnsPacket.get_QDomainName()))
             {
-                // TODO: implement
-                RespondWithBadDomain();
+                respondWithBadDomain(requestDnsPacket, requestUdpPacket.getAddress(), requestUdpPacket.getPort());
                 continue;
             }
 
@@ -49,8 +49,8 @@ class SinkholeServer {
 
             DnsPacket responseDnsPacket = _iterativeClient.GetResponsePacket(requestUdpPacket, rootServerAddress);
             DatagramPacket responseUdpPacket = new DatagramPacket(
-                    responseDnsPacket.getData(),
-                    responseDnsPacket.getData().length,
+                    responseDnsPacket.get_Data(),
+                    responseDnsPacket.get_Data().length,
                     requestUdpPacket.getAddress(),
                     requestUdpPacket.getPort());
 
@@ -85,9 +85,19 @@ class SinkholeServer {
         return rootServer;
     }
 
-    private void RespondWithBadDomain()
+    private void respondWithBadDomain(DnsPacket packetToModifyAndReturn, InetAddress clientAddress, int clientPort)
     {
+        packetToModifyAndReturn.set_RCodeToNXDomain();
+        packetToModifyAndReturn.set_RequestResponse(true);
+        packetToModifyAndReturn.set_RecursionAvailable(true);
 
+        DatagramPacket udpFinalResponseToClient = new DatagramPacket(
+                packetToModifyAndReturn.get_Data(),
+                packetToModifyAndReturn.get_Data().length,
+                clientAddress,
+                clientPort);
+
+        trySendResponseUdpPacket(udpFinalResponseToClient);
     }
 
     private DatagramPacket tryReceiveUdpPacket() {
@@ -111,7 +121,7 @@ class SinkholeServer {
         try
         {
             this._serverSocket = new DatagramSocket(_listenPort);
-
+            System.out.println("SinkholeServer - Server started successfully.");
         }
         catch (SocketException e)
         {

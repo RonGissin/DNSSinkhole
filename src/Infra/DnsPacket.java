@@ -8,19 +8,38 @@ public class DnsPacket {
         _rawDnsData = udpPacket.getData();
         _provider = new DnsContentProvider(this);
 
-        _qDomainName = _provider.get_questionName();
+        _qDomainName = _provider.GetPacketQuestionName();
         _isAnswer = _provider.IsFinalAnswer();
-        _firstAuthorityName = _provider.get_authority();
+        _firstAuthorityName = _provider.GetPacketAuthority();
     }
 
-    public byte[] getData()
+    public byte[] get_Data()
     {
         return _rawDnsData;
     }
 
-    public String getQDomainName()
+    public String get_QDomainName()
     {
         return _qDomainName;
+    }
+
+    public void set_RequestResponse(boolean shouldBeResponse)
+    {
+        _provider.SetQueryResponse(shouldBeResponse);
+    }
+    public void set_RecursionAvailable(boolean activate)
+    {
+        _provider.SetRecursionAvailable(activate);
+    }
+
+    public void set_AuthoritativeAnswer(boolean activate)
+    {
+        _provider.SetRecursionAvailable(activate);
+    }
+
+    public void set_RCodeToNXDomain()
+    {
+        _provider.SetRCodeToNXDomain();
     }
 
     public boolean IsFinalAnswer()

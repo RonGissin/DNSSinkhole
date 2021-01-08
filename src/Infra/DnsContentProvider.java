@@ -1,14 +1,13 @@
 package Infra;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class DnsContentProvider {
     public DnsContentProvider(DnsPacket dnsPacket)
     {
         // get data.
-        _rawDnsData = dnsPacket.getData();
+        _rawDnsData = dnsPacket.get_Data();
 
         // get answer count.
         _ansCount = (_rawDnsData[6] << 8) + _rawDnsData[7];
@@ -23,6 +22,9 @@ public class DnsContentProvider {
         _packetIdx = 12;
         _questionName = getHostName();
 
+        // skip question's QTYPE and QCLASS.
+        _packetIdx += 4;
+
         skipAnswerSection();
 
         _authority = getFirstAuthorityServer();
@@ -31,47 +33,74 @@ public class DnsContentProvider {
     }
 
 
-    public String get_questionName() {
-        System.out.println(_questionName);
+    public String GetPacketQuestionName() {
+        System.out.println("DnsContentProvider - returning question name - " + _questionName);
 
         return _questionName;
     }
 
-    public String get_authority() {
+    public String GetPacketAuthority() {
         return _authority;
     }
 
     public boolean IsFinalAnswer()
     {
-        return _ansCount > 0 || _responseCode != 0 || _authority == null;
+        return (_ansCount > 0 || _responseCode != 0 || _authority == null) & !isQuery();
+    }
+
+    public void SetRecursionAvailable(boolean activatate)
+    {
+        if(activatate)
+        {
+            _rawDnsData[3] = (byte)((int)_rawDnsData[3] | 128);
+        }
+        else
+        {
+            _rawDnsData[3] = (byte)((int)_rawDnsData[3] & 127);
+        }
+    }
+
+    public void SetQueryResponse(boolean shouldBeResponse)
+    {
+        if(shouldBeResponse)
+        {
+            _rawDnsData[2] = (byte)((int)_rawDnsData[2] | 128);
+        }
+        else
+        {
+            _rawDnsData[2] = (byte)((int)_rawDnsData[2] & 127);
+        }
+    }
+
+    public void SetAuthoritativeAnswer(boolean isAuthoritative)
+    {
+        if(isAuthoritative)
+        {
+            _rawDnsData[2] = (byte)((int)_rawDnsData[2] | 4);
+        }
+        else
+        {
+            _rawDnsData[2] = (byte)((int)_rawDnsData[2] & 251);
+        }
+    }
+
+    public void SetRCodeToNXDomain()
+    {
+        _rawDnsData[3] = (byte)((int)_rawDnsData[3] & 3);
     }
 
     private String getFirstAuthorityServer()
     {
         if (_nsCount == 0) return null;
 
-        // skip NAME.
-        int current = _rawDnsData[_packetIdx];
-        while (current != 0 && current < CReadingPointerThreshold)
-        {
-            _packetIdx++;
-            current = _rawDnsData[_packetIdx];
-        }
+        String authorityName = getHostName();
 
-        _packetIdx++;
+        // skip TYPE, CLASS, TTL, DATALength.
+        _packetIdx += 10;
 
-        if(current != 0)
-        {
-            _packetIdx++;
-        }
+        String nsName = getHostName();
 
-        // skip TYPE, CLASS and TTL.
-        _packetIdx += 8;
-
-        // skip rdLength
-        _packetIdx += 2;
-
-        return getHostName();
+        return nsName;
     }
 
     private void skipAnswerSection()
@@ -80,15 +109,12 @@ public class DnsContentProvider {
 
         for(int i = 0; i < _ansCount; i++)
         {
-            // skip QTYPE and QCLASS.
-            _packetIdx += 2;
-
             // skip NAME.
-            int current = _rawDnsData[_packetIdx];
+            int current = castByteToUnsignedInt(_rawDnsData[_packetIdx]);
             while (current != 0 && current < CReadingPointerThreshold)
             {
                 _packetIdx++;
-                current = _rawDnsData[_packetIdx];
+                current = castByteToUnsignedInt(_rawDnsData[_packetIdx]);
             }
 
             _packetIdx++;
@@ -111,6 +137,7 @@ public class DnsContentProvider {
     {
         StringBuilder domainName = new StringBuilder();
         int location = _packetIdx;
+        boolean jumpOccurred = false;
 
         // a list to hold the current label content being read.
         List<Character> labelContent = new ArrayList<>();
@@ -118,7 +145,7 @@ public class DnsContentProvider {
         int currentLabelContentLength = 0;
         int currentByteInLabelContent = 1;
 
-        int current = _rawDnsData[location];
+        int current = castByteToUnsignedInt(_rawDnsData[location]);
 
         while(current != 0)
         {
@@ -127,6 +154,7 @@ public class DnsContentProvider {
                 // jump to pointer.
                 location = ((current - CReadingPointerThreshold) << 8) + _rawDnsData[location + 1];
                 isReadingLengthPart = true;
+                jumpOccurred = true;
             }
             else
             {
@@ -157,16 +185,36 @@ public class DnsContentProvider {
 
                 // move to next byte.
                 location++;
-                _packetIdx++;
+                if(!jumpOccurred) _packetIdx++;
             }
 
-            current = _rawDnsData[location];
+            current = castByteToUnsignedInt(_rawDnsData[location]);
+        }
+
+        if(jumpOccurred)
+        {
+            // move ahead of jump length label.
+            _packetIdx += 2;
+        }
+        else
+        {
+            // move from 0 octet to the next section.
+            _packetIdx++;
         }
 
         // trim the last period.
         domainName.deleteCharAt(domainName.length() - 1);
 
         return domainName.toString();
+    }
+
+    private boolean isQuery()
+    {
+        if((_rawDnsData[2] & 128) == 0){
+            return true;
+        }
+
+        return false;
     }
 
     private static void appendLabelToDomainName(StringBuilder domainName, List<Character> labelContent)
@@ -176,7 +224,11 @@ public class DnsContentProvider {
             domainName.append(c);
         }
         domainName.append('.');
+    }
 
+    private int castByteToUnsignedInt(byte byteToCast)
+    {
+        return (int)byteToCast & 0xff;
     }
 
     private static final int CReadingPointerThreshold = 192;
@@ -188,4 +240,7 @@ public class DnsContentProvider {
     private String _authority;
     private boolean _isFinalAnswer;
     private int _packetIdx;
+
+
+
 }
