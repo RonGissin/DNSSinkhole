@@ -1,18 +1,17 @@
-package SinkholeServer;
+package il.ac.idc.cs.sinkhole;
 
 import java.io.IOException;
 import java.net.*;
-import Infra.*;
 
 /**
  * Class that defines the server object that runs the entire flow of dns requests and responses
  */
-class SinkholeServer {
+class RecursiveServer {
     /**
      * constructor.
      * @param listenPort - the port to listen on.
      */
-    public SinkholeServer(int listenPort, DomainEnforcer domainEnforcer)
+    public RecursiveServer(int listenPort, DomainEnforcer domainEnforcer)
     {
         _listenPort = listenPort;
         _serverSocket = null;
@@ -31,10 +30,10 @@ class SinkholeServer {
         tryInitServerSocket();
 
         while (true) {
-            System.out.println("SinkholeServer - listening for udp packets.");
+            System.out.println("RecursiveServer - listening for udp packets.");
             // receive datagram packet.
             DatagramPacket requestUdpPacket = tryReceiveUdpPacket();
-            System.out.println("SinkholeServer - received udp packet from client.");
+            System.out.println("RecursiveServer - received udp packet from client.");
             DnsPacket requestDnsPacket = new DnsPacket(requestUdpPacket);
 
             // whitelist the dns domain.
@@ -55,6 +54,7 @@ class SinkholeServer {
                     requestUdpPacket.getAddress(),
                     requestUdpPacket.getPort());
 
+            System.out.println("RecursiveServer - returning final answer to client.");
             trySendResponseUdpPacket(responseUdpPacket);
         }
     }
@@ -98,7 +98,7 @@ class SinkholeServer {
                 clientAddress,
                 clientPort);
 
-        System.out.println("SinkholeServer - Responding with bad domain.");
+        System.out.println("RecursiveServer - Responding with bad domain.");
         trySendResponseUdpPacket(udpFinalResponseToClient);
     }
 
@@ -123,7 +123,7 @@ class SinkholeServer {
         try
         {
             this._serverSocket = new DatagramSocket(_listenPort);
-            System.out.println("SinkholeServer - Server started successfully.");
+            System.out.println("RecursiveServer - Server started successfully.");
         }
         catch (SocketException e)
         {

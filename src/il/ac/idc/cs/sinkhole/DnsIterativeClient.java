@@ -1,7 +1,4 @@
-package SinkholeServer;
-
-import Infra.DnsOperationsConsts;
-import Infra.DnsPacket;
+package il.ac.idc.cs.sinkhole;
 
 import java.io.IOException;
 import java.net.*;
@@ -13,7 +10,7 @@ public class DnsIterativeClient {
 
         try
         {
-            _clientSocket = new DatagramSocket();
+            _clientSocket = new DatagramSocket(DnsOperationsConsts.DnsClientPort);
         }
         catch (SocketException e)
         {
@@ -29,7 +26,7 @@ public class DnsIterativeClient {
                 requestPacket.getData(),
                 requestPacket.getData().length,
                 nsServerAddress,
-                DnsOperationsConsts.DnsPort);
+                DnsOperationsConsts.DnsClientPort);
 
         // send query to root.
         trySendQueryUdpPacket(packetForRoot);
@@ -38,8 +35,10 @@ public class DnsIterativeClient {
 
         DnsPacket responseDnsPacket = new DnsPacket(receivePacket);
 
+        int iterationNumber = 1;
+
         // run on all servers.
-        while(!responseDnsPacket.IsFinalAnswer()) {
+        while(!responseDnsPacket.IsFinalAnswer() && iterationNumber < CMaxIterations) {
             //send to dns server
             DatagramPacket packetForNextDNS = null;
             try {
@@ -47,7 +46,7 @@ public class DnsIterativeClient {
                         requestPacket.getData(),
                         requestPacket.getData().length,
                         InetAddress.getByName(responseDnsPacket.get_authority()),
-                        DnsOperationsConsts.DnsPort);
+                        DnsOperationsConsts.DnsClientPort);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
@@ -98,7 +97,5 @@ public class DnsIterativeClient {
 
     private DatagramSocket _clientSocket;
     private byte[] _receiveData;
-    private byte[] _requestData;
-    private InetAddress _rootAddress;
     private static final int CMaxIterations = 16;
 }

@@ -1,4 +1,4 @@
-package Infra;
+package il.ac.idc.cs.sinkhole;
 
 public final class DnsOperationsConsts
 {
@@ -6,7 +6,8 @@ public final class DnsOperationsConsts
     {
     }
 
-    public static int DnsPort = 53;
+    public static int DnsServerPort = 5300;
+    public static int DnsClientPort = 53;
     public static int DnsHeaderLength = 12;
     public static int DnsUdpPacketSize = 1024;
 }

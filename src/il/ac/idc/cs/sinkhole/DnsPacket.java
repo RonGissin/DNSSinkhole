@@ -1,4 +1,4 @@
-package Infra;
+package il.ac.idc.cs.sinkhole;
 
 import java.net.DatagramPacket;
 

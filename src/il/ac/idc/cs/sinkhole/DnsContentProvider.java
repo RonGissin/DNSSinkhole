@@ -1,4 +1,6 @@
-package Infra;
+package il.ac.idc.cs.sinkhole;
+
+import il.ac.idc.cs.sinkhole.DnsPacket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +21,7 @@ public class DnsContentProvider {
         _responseCode = _rawDnsData[3] & 15;
 
         // get question name.
-        _packetIdx = 12;
+        _packetIdx = DnsOperationsConsts.DnsHeaderLength;
         _questionName = getHostName();
 
         // skip question's QTYPE and QCLASS.
@@ -28,8 +30,6 @@ public class DnsContentProvider {
         skipAnswerSection();
 
         _authority = getFirstAuthorityServer();
-
-        _isFinalAnswer = IsFinalAnswer();
     }
 
 
@@ -93,7 +93,8 @@ public class DnsContentProvider {
     {
         if (_nsCount == 0) return null;
 
-        String authorityName = getHostName();
+        // skip authority name.
+        getHostName();
 
         // skip TYPE, CLASS, TTL, DATALength.
         _packetIdx += 10;
@@ -238,9 +239,5 @@ public class DnsContentProvider {
     private int _nsCount;
     private String _questionName;
     private String _authority;
-    private boolean _isFinalAnswer;
     private int _packetIdx;
-
-
-
 }

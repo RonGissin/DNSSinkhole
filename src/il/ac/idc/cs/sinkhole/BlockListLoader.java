@@ -1,4 +1,4 @@
-package Infra;
+package il.ac.idc.cs.sinkhole;
 
 import java.io.*;
 import java.net.URL;
@@ -16,10 +16,10 @@ public class BlockListLoader {
      * Loads the block list to a HashSet.
      * @return the block list as HashSet.
      */
-    public HashSet<String> Load()
+    public HashSet<String> Load(String filePath)
     {
         // Establish reader.
-        BufferedReader reader = getBlockListFileReader();
+        BufferedReader reader = getBlockListFileReader(filePath);
 
         if(reader == null)
         {
@@ -29,12 +29,12 @@ public class BlockListLoader {
         return getPopulatedBlockList(reader);
     }
 
-    private BufferedReader getBlockListFileReader(){
+    private BufferedReader getBlockListFileReader(String filePath){
         BufferedReader reader = null;
 
         try
         {
-            URL path = BlockListLoader.class.getResource(CBlockListFileName);
+            URL path = BlockListLoader.class.getResource(filePath);
             File file = new File(path.getFile());
             reader = new BufferedReader(new FileReader(file));
         }
@@ -68,6 +68,4 @@ public class BlockListLoader {
 
         return blockList;
     }
-
-    private static final String CBlockListFileName = "blocklist.txt";
 }
