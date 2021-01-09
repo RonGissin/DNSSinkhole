@@ -76,7 +76,7 @@ public class DnsContentProvider {
     {
         if(isAuthoritative)
         {
-            _rawDnsData[2] = (byte)(castByteToUnsignedInt(_rawDnsData[2]) | 4);
+            _rawDnsData[2] = (byte)((castByteToUnsignedInt(_rawDnsData[2]) & 251) + 4);
         }
         else
         {

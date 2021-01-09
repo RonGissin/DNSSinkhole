@@ -35,7 +35,7 @@ public class DnsPacket {
 
     public void set_AuthoritativeAnswer(boolean activate)
     {
-        _provider.SetRecursionAvailable(activate);
+        _provider.SetAuthoritativeAnswer(activate);
     }
 
     public void set_RCodeToNXDomain()
