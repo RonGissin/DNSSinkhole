@@ -54,8 +54,7 @@ public class DnsIterativeClient {
 
             trySendQueryUdpPacket(packetForNextDNS);
 
-
-            // get response from dns servee.
+            // get response from dns server.
             receivePacket = tryReceiveUdpPacket();
 
             responseDnsPacket = new DnsPacket(receivePacket);

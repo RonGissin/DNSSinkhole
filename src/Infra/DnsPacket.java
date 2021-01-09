@@ -27,6 +27,7 @@ public class DnsPacket {
     {
         _provider.SetQueryResponse(shouldBeResponse);
     }
+
     public void set_RecursionAvailable(boolean activate)
     {
         _provider.SetRecursionAvailable(activate);

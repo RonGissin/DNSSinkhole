@@ -48,6 +48,7 @@ class SinkholeServer {
             InetAddress rootServerAddress = tryGetRootServerAddress();
 
             DnsPacket responseDnsPacket = _iterativeClient.GetResponsePacket(requestUdpPacket, rootServerAddress);
+
             DatagramPacket responseUdpPacket = new DatagramPacket(
                     responseDnsPacket.get_Data(),
                     responseDnsPacket.get_Data().length,
@@ -97,6 +98,7 @@ class SinkholeServer {
                 clientAddress,
                 clientPort);
 
+        System.out.println("SinkholeServer - Responding with bad domain.");
         trySendResponseUdpPacket(udpFinalResponseToClient);
     }
 

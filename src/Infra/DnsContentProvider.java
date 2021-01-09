@@ -48,15 +48,15 @@ public class DnsContentProvider {
         return (_ansCount > 0 || _responseCode != 0 || _authority == null) & !isQuery();
     }
 
-    public void SetRecursionAvailable(boolean activatate)
+    public void SetRecursionAvailable(boolean activate)
     {
-        if(activatate)
+        if(activate)
         {
-            _rawDnsData[3] = (byte)((int)_rawDnsData[3] | 128);
+            _rawDnsData[3] = (byte)((castByteToUnsignedInt(_rawDnsData[3]) & 127) + 128);
         }
         else
         {
-            _rawDnsData[3] = (byte)((int)_rawDnsData[3] & 127);
+            _rawDnsData[3] = (byte)(castByteToUnsignedInt(_rawDnsData[3]) & 127);
         }
     }
 
@@ -64,11 +64,11 @@ public class DnsContentProvider {
     {
         if(shouldBeResponse)
         {
-            _rawDnsData[2] = (byte)((int)_rawDnsData[2] | 128);
+            _rawDnsData[2] = (byte)((castByteToUnsignedInt(_rawDnsData[2]) & 127) + 128);
         }
         else
         {
-            _rawDnsData[2] = (byte)((int)_rawDnsData[2] & 127);
+            _rawDnsData[2] = (byte)(castByteToUnsignedInt(_rawDnsData[2]) & 127);
         }
     }
 
@@ -76,17 +76,17 @@ public class DnsContentProvider {
     {
         if(isAuthoritative)
         {
-            _rawDnsData[2] = (byte)((int)_rawDnsData[2] | 4);
+            _rawDnsData[2] = (byte)(castByteToUnsignedInt(_rawDnsData[2]) | 4);
         }
         else
         {
-            _rawDnsData[2] = (byte)((int)_rawDnsData[2] & 251);
+            _rawDnsData[2] = (byte)(castByteToUnsignedInt(_rawDnsData[2]) & 251);
         }
     }
 
     public void SetRCodeToNXDomain()
     {
-        _rawDnsData[3] = (byte)((int)_rawDnsData[3] & 3);
+        _rawDnsData[3] = (byte)((castByteToUnsignedInt(_rawDnsData[3]) & 240) + 3);
     }
 
     private String getFirstAuthorityServer()
