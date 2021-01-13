@@ -25,8 +25,6 @@ class RecursiveServer {
      */
     public void Start()
     {
-        byte[] sendData;
-
         tryInitServerSocket();
 
         while (true) {
@@ -64,9 +62,10 @@ class RecursiveServer {
         try
         {
             _serverSocket.send(responsePacket);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
-            System.out.println(String.format("Exception occurred while trying to send response packet to client. exception = {0}", e));
+            System.err.printf("Exception occurred while trying to send response packet to client. exception = %s", e);
         }
     }
 
@@ -80,7 +79,7 @@ class RecursiveServer {
         }
         catch(UnknownHostException e)
         {
-            System.out.println(String.format("Exception occurred while trying to fetch ip address of root. exception = {0}", e));
+            System.err.printf("Exception occurred while trying to fetch ip address of root. exception = %s", e);
         }
 
         return rootServer;
@@ -103,7 +102,7 @@ class RecursiveServer {
     }
 
     private DatagramPacket tryReceiveUdpPacket() {
-        byte[] receiveData = new byte[DnsOperationsConsts.DnsUdpPacketSize];
+        byte[] receiveData = new byte[DnsConsts.DnsUdpPacketSize];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
         try
@@ -112,7 +111,7 @@ class RecursiveServer {
         }
         catch(IOException e)
         {
-            System.out.println(String.format("Exception occured while trying to receive packet. exception = {0}", e));
+            System.err.printf("Exception occured while trying to receive packet. exception = %s", e);
         }
 
         return receivePacket;
@@ -123,11 +122,11 @@ class RecursiveServer {
         try
         {
             this._serverSocket = new DatagramSocket(_listenPort);
-            System.out.println("RecursiveServer - Server started successfully.");
+            System.out.printf("RecursiveServer - Server started listening on port %s.\r\n", _listenPort);
         }
         catch (SocketException e)
         {
-            System.out.println(String.format("Exception occured initializing server socket. exception = {0}", e));
+            System.err.printf("Exception occurred initializing server socket. exception = %s", e);
         }
     }
 

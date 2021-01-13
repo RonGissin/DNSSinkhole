@@ -17,7 +17,7 @@ public class SinkholeServer {
 
         DomainEnforcer domainEnforcer = new DomainEnforcer(blockList);
 
-        RecursiveServer server = new RecursiveServer(DnsOperationsConsts.DnsServerPort, domainEnforcer);
+        RecursiveServer server = new RecursiveServer(DnsConsts.DnsServerPort, domainEnforcer);
 
         // start server.
         server.Start();

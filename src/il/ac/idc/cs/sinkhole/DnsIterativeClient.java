@@ -6,30 +6,30 @@ import java.net.*;
 public class DnsIterativeClient {
     public DnsIterativeClient()
     {
-        _receiveData = new byte[DnsOperationsConsts.DnsUdpPacketSize];
+        _receiveData = new byte[DnsConsts.DnsUdpPacketSize];
 
         try
         {
-            _clientSocket = new DatagramSocket(DnsOperationsConsts.DnsClientPort);
+            _clientSocket = new DatagramSocket(DnsConsts.DnsClientPort);
         }
         catch (SocketException e)
         {
-            System.out.println(String.format("exception on opening client udp socket - {0}", e));
+            System.err.printf("exception on opening client udp socket - {0}", e);
         }
     }
 
     public DnsPacket GetResponsePacket(DatagramPacket requestPacket, InetAddress rootAddress)
     {
-        InetAddress nsServerAddress = rootAddress;
+        DnsPacket dnsOriginalRequest = new DnsPacket(requestPacket);
 
-        DatagramPacket packetForRoot = new DatagramPacket(
-                requestPacket.getData(),
-                requestPacket.getData().length,
-                nsServerAddress,
-                DnsOperationsConsts.DnsClientPort);
+        DatagramPacket udpPacketForRoot = new DatagramPacket(
+                dnsOriginalRequest.get_Data(),
+                dnsOriginalRequest.get_Data().length,
+                rootAddress,
+                DnsConsts.DnsClientPort);
 
         // send query to root.
-        trySendQueryUdpPacket(packetForRoot);
+        trySendQueryUdpPacket(udpPacketForRoot);
         // get response from root.
         DatagramPacket receivePacket = tryReceiveUdpPacket();
 
@@ -43,12 +43,12 @@ public class DnsIterativeClient {
             DatagramPacket packetForNextDNS = null;
             try {
                 packetForNextDNS = new DatagramPacket(
-                        requestPacket.getData(),
-                        requestPacket.getData().length,
+                        dnsOriginalRequest.get_Data(),
+                        dnsOriginalRequest.get_Data().length,
                         InetAddress.getByName(responseDnsPacket.get_authority()),
-                        DnsOperationsConsts.DnsClientPort);
+                        DnsConsts.DnsClientPort);
             } catch (UnknownHostException e) {
-                e.printStackTrace();
+                System.err.printf("An unknown host exception occurred when retrieving the auth server ip. error={0}", e);
             }
 
             trySendQueryUdpPacket(packetForNextDNS);
@@ -72,9 +72,10 @@ public class DnsIterativeClient {
         {
             System.out.println("DnsIterativeClient - sending out datagram to authority/root server.");
             _clientSocket.send(responsePacket);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
-            System.out.println(String.format("Exception occurred while trying to send query packet to dns server. exception = {0}", e));
+            System.err.printf("Exception occurred while trying to send query packet to dns server. exception = {0}", e);
         }
     }
 
@@ -89,7 +90,7 @@ public class DnsIterativeClient {
         }
         catch(IOException e)
         {
-            System.out.println(String.format("Exception occured while trying to receive packet from dns server. exception = {0}", e));
+            System.err.printf("Exception occured while trying to receive packet from dns server. exception = {0}", e);
         }
 
         return receivePacket;

@@ -40,7 +40,7 @@ public class BlockListLoader {
         }
         catch (FileNotFoundException e)
         {
-            System.out.println(String.format("BlockListLoader - exception occurred establishing reader. exception = {0}", e));
+            System.err.printf("BlockListLoader - exception occurred establishing reader. exception = {0}", e);
         }
 
         return reader;
@@ -63,7 +63,7 @@ public class BlockListLoader {
         }
         catch (IOException e)
         {
-            System.out.println(String.format("BlockListLoader - exception occurred while reading file. exception = {0}", e));
+            System.err.printf("BlockListLoader - exception occurred while reading file. exception = {0}", e);
         }
 
         return blockList;
