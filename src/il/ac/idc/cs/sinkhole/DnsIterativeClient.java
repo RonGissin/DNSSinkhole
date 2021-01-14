@@ -3,7 +3,15 @@ package il.ac.idc.cs.sinkhole;
 import java.io.IOException;
 import java.net.*;
 
+/**
+ * Defines the client class that takes care of communication
+ * with all intermediate dns servers (incl. root) until returning the
+ * final dns answer.
+ */
 public class DnsIterativeClient {
+    /**
+     * Creates a new instance of iterative dns client.
+     */
     public DnsIterativeClient()
     {
         _receiveData = new byte[DnsConsts.DnsUdpPacketSize];
@@ -18,6 +26,12 @@ public class DnsIterativeClient {
         }
     }
 
+    /**
+     * Resolves a given dns query iteratively, starting from the given root server address.
+     * @param requestPacket - the dns query to resolve.
+     * @param rootAddress - the root server address to start with.
+     * @return A dns packet that constitutes the answer.
+     */
     public DnsPacket GetResponsePacket(DatagramPacket requestPacket, InetAddress rootAddress)
     {
         DnsPacket dnsOriginalRequest = new DnsPacket(requestPacket);

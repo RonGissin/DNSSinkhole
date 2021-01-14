@@ -8,8 +8,10 @@ import java.net.*;
  */
 class RecursiveServer {
     /**
-     * constructor.
+     * Creates a new recursive dns server, that will listen on given port,
+     * and use given domain enforcer to block certain domain requests.
      * @param listenPort - the port to listen on.
+     * @param domainEnforcer - the enforcer of domains.
      */
     public RecursiveServer(int listenPort, DomainEnforcer domainEnforcer)
     {

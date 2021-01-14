@@ -2,6 +2,9 @@ package il.ac.idc.cs.sinkhole;
 
 import java.util.HashSet;
 
+/**
+ * The entry point for the dns recursive sinkhole server project.
+ */
 public class SinkholeServer {
     public static void main(String[] args) {
         // load block list.

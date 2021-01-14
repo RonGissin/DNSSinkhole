@@ -5,7 +5,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Class that defines a dns packet that resides inside a udp segment.
+ */
 public class DnsPacket {
+    /**
+     * Creates a new instance of dns packet, takes all necessary information
+     * from the given udp packet raw data.
+     * @param udpPacket - the udp packet in which the dns data resides.
+     */
     public DnsPacket(DatagramPacket udpPacket)
     {
         // get data.
@@ -30,7 +38,7 @@ public class DnsPacket {
         _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize;
 
         skipAnswerSection();
-        _firstAuthorityName = getFirstAuthorityServer();
+        _firstAuthorityName = getFirstAuthorityServerAndSkipRest();
 
         // remove additional RRs.
         _rawDnsData = Arrays.copyOfRange(_rawDnsData, 0, _packetIdx);
@@ -38,16 +46,28 @@ public class DnsPacket {
         SetZeroAdditionalRecords();
     }
 
+    /**
+     * Gets the raw dns data.
+     * @return a byte array of dns data.
+     */
     public byte[] get_Data()
     {
         return _rawDnsData;
     }
 
+    /**
+     * Gets the question domain name.
+     * @return the question domain name.
+     */
     public String get_QDomainName()
     {
         return _questionName;
     }
 
+    /**
+     * Sets the QR flag.
+     * @param shouldBeResponse - boolean flag to determine what bit to write.
+     */
     public void set_RequestResponse(boolean shouldBeResponse)
     {
         if(shouldBeResponse)
@@ -62,6 +82,10 @@ public class DnsPacket {
         }
     }
 
+    /**
+     * Sets the RA flag.
+     * @param activate - boolean flag to determine what bit to write.
+     */
     public void set_RecursionAvailable(boolean activate)
     {
         if(activate)
@@ -76,6 +100,10 @@ public class DnsPacket {
         }
     }
 
+    /**
+     * Sets the AA flag.
+     * @param isAuthoritative - boolean flag to determine what bit to write.
+     */
     public void set_AuthoritativeAnswer(boolean isAuthoritative)
     {
         if(isAuthoritative)
@@ -90,22 +118,35 @@ public class DnsPacket {
         }
     }
 
+
+    /**
+     * Sets the RCode to NXDomain.
+     */
     public void set_RCodeToNXDomain()
     {
         _rawDnsData[DnsConsts.CRCodeByteIndex] =
                 (byte)((castByteToUnsignedInt(_rawDnsData[DnsConsts.CRCodeByteIndex]) & 240) + 3);
     }
 
+    /**
+     * Returns true if this packet is a final answer for the client.
+     * @return true, if this is a final answer. false, otherwise.
+     */
     public boolean IsFinalAnswer()
     {
         return (_ansCount > 0 || _responseCode != 0 || _firstAuthorityName == null) & !isQuery();
     }
 
+    /**
+     * Gets the authority server given in this packet data.
+     * If there is no authority, the method returns null.
+     * @return the authority name, or null.
+     */
     public String get_authority() {
         return _firstAuthorityName;
     }
 
-    private String getFirstAuthorityServer()
+    private String getFirstAuthorityServerAndSkipRest()
     {
         if (_nsCount == 0) return null;
 
@@ -116,6 +157,19 @@ public class DnsPacket {
         _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize + DnsConsts.CRRTtlSize + DnsConsts.CRdLengthSize;
 
         String nsName = getHostName();
+
+        // skip other authorities.
+        for(int i = 0; i < _nsCount - 1; i++)
+        {
+            // skip authority name.
+            getHostName();
+
+            // skip TYPE, CLASS, TTL, DATALength.
+            _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize + DnsConsts.CRRTtlSize + DnsConsts.CRdLengthSize;
+
+            // skip RRData.
+            getHostName();
+        }
 
         return nsName;
     }
