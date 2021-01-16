@@ -150,28 +150,30 @@ public class DnsPacket {
     {
         if (_nsCount == 0) return null;
 
-        // skip authority name.
-        getHostName();
+        List<String> authorityNames = new ArrayList<>();
+        int rDataLength = 0;
+        int posBeforeRdData = 0;
 
-        // skip TYPE, CLASS, TTL, DATALength.
-        _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize + DnsConsts.CRRTtlSize + DnsConsts.CRdLengthSize;
-
-        String nsName = getHostName();
-
-        // skip other authorities.
-        for(int i = 0; i < _nsCount - 1; i++)
+        for(int i = 0; i < _nsCount; i++)
         {
-            // skip authority name.
+            // skip question name.
             getHostName();
 
-            // skip TYPE, CLASS, TTL, DATALength.
-            _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize + DnsConsts.CRRTtlSize + DnsConsts.CRdLengthSize;
+            // skip TYPE, CLASS, TTL.
+            _packetIdx += DnsConsts.CRRTypeSize + DnsConsts.CRRClassSize + DnsConsts.CRRTtlSize;
 
-            // skip RRData.
-            getHostName();
+            rDataLength = (_rawDnsData[_packetIdx] << 8) | _rawDnsData[_packetIdx + 1];
+
+            _packetIdx += DnsConsts.CRdLengthSize;
+
+            posBeforeRdData = _packetIdx;
+
+            authorityNames.add(getHostName());
+
+            _packetIdx = posBeforeRdData + rDataLength;
         }
 
-        return nsName;
+        return authorityNames.get(0);
     }
 
     private void skipAnswerSection()

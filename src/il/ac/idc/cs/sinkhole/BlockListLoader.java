@@ -34,13 +34,12 @@ public class BlockListLoader {
 
         try
         {
-            URL path = BlockListLoader.class.getResource(filePath);
-            File file = new File(path.getFile());
+            File file = new File(filePath);
             reader = new BufferedReader(new FileReader(file));
         }
         catch (FileNotFoundException e)
         {
-            System.err.printf("BlockListLoader - exception occurred establishing reader. exception = {0}", e);
+            System.err.printf("BlockListLoader - exception occurred establishing reader. exception = {0}\r\n", e);
         }
 
         return reader;
